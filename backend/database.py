@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
-SQLALCHEMY_DATABASE_URL = "mssql+pymssql://ngabou:Guy@sys001@apsys.database.windows.net/RISQUESAGG"
+
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
 )
