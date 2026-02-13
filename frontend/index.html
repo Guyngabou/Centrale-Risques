@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASAC - Centrale des Risques</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+
+<body>
+    <!-- Auth View -->
+    <div id="auth-view" class="auth-container">
+        <div class="auth-card">
+            <div class="logo-header">
+                <h1>ASAC</h1>
+                <p>Centrale des Risques</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Identifiant utilisateur</label>
+                    <input type="text" id="username" class="form-input" placeholder="Ex: axa_user" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%">Se connecter</button>
+                <p id="login-error" class="danger"
+                    style="margin-top: 1rem; text-align: center; font-size: 0.8rem; display: none;">Identifiants
+                    invalides</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- App View -->
+    <div id="app-view" class="app-layout hidden">
+        <aside class="sidebar">
+            <div style="margin-bottom: 2rem;">
+                <h2 style="font-size: 1.2rem;">CENTRALE RISQUES</h2>
+                <p id="user-info" style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;"></p>
+            </div>
+
+            <nav id="nav-compagnie" class="hidden">
+                <div class="nav-item active" data-view="compagnie-dash">Tableau de Bord</div>
+                <div class="nav-item" data-view="compagnie-search">Consulter un Score</div>
+                <div class="nav-item" data-view="compagnie-declare">Déclarer un Sinistre</div>
+            </nav>
+
+            <nav id="nav-asac" class="hidden">
+                <div class="nav-item active" data-view="asac-dash">Stats Nationales</div>
+                <div class="nav-item" data-view="asac-companies">Gérer les Compagnies</div>
+                <div class="nav-item" data-view="asac-users">Gérer les Utilisateurs</div>
+            </nav>
+
+            <div style="margin-top: auto;">
+                <button id="logout-btn" class="btn"
+                    style="background: #374151; color: white; width: 100%;">Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Compagnie Dash -->
+            <section id="compagnie-dash" class="view-section">
+                <h2 style="margin-bottom: 1.5rem;">Bienvenue sur votre Espace Compagnie</h2>
+                <div class="grid-2">
+                    <div class="card" style="text-align: center; cursor: pointer;"
+                        onclick="app.switchNav('compagnie-search')">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">🔍</div>
+                        <h3>Consulter un Score</h3>
+                        <p style="color: var(--text-muted); font-size: 0.875rem;">Vérifier les antécédents d'un futur
+                            assuré</p>
+                    </div>
+                    <div class="card" style="text-align: center; cursor: pointer;"
+                        onclick="app.switchNav('compagnie-declare')">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">📝</div>
+                        <h3>Déclarer un Sinistre</h3>
+                        <p style="color: var(--text-muted); font-size: 0.875rem;">Alimenter la base centrale des risques
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Score Search -->
+            <section id="compagnie-search" class="view-section hidden">
+                <h2 style="margin-bottom: 1.5rem;">Consultation du Risque Assuré</h2>
+                <div class="card">
+                    <form id="search-form">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Type de Document</label>
+                                <select id="search-doc-type" class="form-input">
+                                    <option value="CNI">CNI</option>
+                                    <option value="PASSEPORT">PASSEPORT</option>
+                                    <option value="NIU">NIU</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Numéro de Document</label>
+                                <input type="text" id="search-doc-num" class="form-input" placeholder="Ex: 123456789">
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-bottom: 1rem; font-weight: 500;">OU recherche par état
+                            civil</div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Nom</label>
+                                <input type="text" id="search-nom" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Prénom</label>
+                                <input type="text" id="search-prenom" class="form-input">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Lancer la recherche</button>
+                    </form>
+                </div>
+
+                <div id="search-result" class="card hidden">
+                    <h3>Résultat de l'Analyse</h3>
+                    <div id="score-display" class="score-badge"></div>
+                    <div id="score-details"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.875rem;">
+                        <!-- Details injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sinistre Declaration -->
+            <section id="compagnie-declare" class="view-section hidden">
+                <h2 style="margin-bottom: 1.5rem;">Nouvelle Déclaration de Sinistre</h2>
+                <form id="declare-form">
+                    <div class="card">
+                        <h4 style="margin-bottom: 1rem;">1. Identification de l'Assuré</h4>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Type d'assuré</label>
+                                <select id="dec-type-assure" class="form-input">
+                                    <option value="P">Personne physique</option>
+                                    <option value="M">Personne morale</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Nom / Raison Sociale</label><input type="text" id="dec-nom"
+                                    class="form-input" required></div>
+                            <div class="form-group"><label>Prénom</label><input type="text" id="dec-prenom"
+                                    class="form-input"></div>
+                            <div class="form-group"><label>Date de naissance / Création</label><input type="date"
+                                    id="dec-dob" class="form-input"></div>
+                            <div class="form-group"><label>Lieu de naissance</label><input type="text"
+                                    id="dec-lieu-naissance" class="form-input"></div>
+                            <div class="form-group">
+                                <label>Sexe</label>
+                                <select id="dec-sexe" class="form-input">
+                                    <option value="M">Masculin</option>
+                                    <option value="F">Féminin</option>
+                                    <option value="X">Autre</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Type de Document</label>
+                                <select id="dec-doc-type" class="form-input">
+                                    <option value="CNI">CNI</option>
+                                    <option value="PASSEPORT">PASSEPORT</option>
+                                    <option value="NIU">NIU</option>
+                                    <option value="RC">Régistre de Commerce</option>
+                                    <option value="CARTE_SEJOUR">Carte de Séjour</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>N° Document</label><input type="text" id="dec-doc-num"
+                                    class="form-input"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4 style="margin-bottom: 1rem;">2. Détails du Sinistre</h4>
+                        <div class="grid-2">
+                            <div class="form-group"><label>Date de survenance</label><input type="date" id="dec-date"
+                                    class="form-input" required></div>
+                            <div class="form-group"><label>Lieu de survenance</label><input type="text"
+                                    id="dec-lieu-sinistre" class="form-input"></div>
+                            <div class="form-group">
+                                <label>Branche</label>
+                                <select id="dec-branche" class="form-input">
+                                    <option value="AUTOMOBILE">AUTOMOBILE</option>
+                                    <option value="AUTRES BRANCHES">AUTRES BRANCHES</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Nature du Sinistre</label>
+                                <select id="dec-nature" class="form-input">
+                                    <option value="RC">RC (Resp. Civile)</option>
+                                    <option value="DOMMAGES">DOMMAGES</option>
+                                    <option value="VOL ET INCENDIE">VOL ET INCENDIE</option>
+                                    <option value="DEFENSE ET RECOURS">DEFENSE ET RECOURS</option>
+                                    <option value="HONORAIRES D'EXPERTS">HONORAIRES D'EXPERTS</option>
+                                    <option value="BRIS DE GLACES">BRIS DE GLACES</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rôle Assuré</label>
+                                <select id="dec-role" class="form-input">
+                                    <option value="responsable">Responsable</option>
+                                    <option value="partiel">Partiellement responsable</option>
+                                    <option value="non_responsable">Non responsable</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Taux de responsabilité (%)</label><input type="number"
+                                    id="dec-taux" class="form-input" value="0"></div>
+                            <div class="form-group">
+                                <label>Classe de coût estimé</label>
+                                <select id="dec-cout" class="form-input">
+                                    <option value="tres_faible">Très Faible</option>
+                                    <option value="faible">Faible</option>
+                                    <option value="moyenne">Moyennne</option>
+                                    <option value="elevee">Élevée</option>
+                                    <option value="tres_elevee">Très Élevée</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox"
+                                    id="dec-corporel"> Dommages corporels</label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox"
+                                    id="dec-deces"> Décès</label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox"
+                                    id="dec-rebut"> Véhicule au rebut</label>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4 style="margin-bottom: 1rem;">3. Causes du Sinistre</h4>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" class="dec-cause" value="H"> Facteur Humain
+                                </label>
+                                <label style="font-size: 0.75rem; margin-left: 1.5rem;"><input type="radio"
+                                        name="main-cause" value="H"> Cause principale</label>
+                            </div>
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" class="dec-cause" value="V"> Défaillances Véhicule
+                                </label>
+                                <label style="font-size: 0.75rem; margin-left: 1.5rem;"><input type="radio"
+                                        name="main-cause" value="V"> Cause principale</label>
+                            </div>
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" class="dec-cause" value="I"> État Infrastructures
+                                </label>
+                                <label style="font-size: 0.75rem; margin-left: 1.5rem;"><input type="radio"
+                                        name="main-cause" value="I"> Cause principale</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%">Soumettre la déclaration</button>
+                </form>
+            </section>
+
+            <!-- ASAC Dash -->
+            <section id="asac-dash" class="view-section hidden">
+                <h2 style="margin-bottom: 1.5rem;">Tableau de Bord National (ASAC)</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <p style="color: var(--text-muted); font-size: 0.75rem;">Total Sinistres</p>
+                        <h3 id="stat-sinistres" style="font-size: 1.5rem;">0</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p style="color: var(--text-muted); font-size: 0.75rem;">Sinistres (Année en cours)</p>
+                        <h3 id="stat-sinistres-annee" style="font-size: 1.5rem;">0</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p style="color: var(--text-muted); font-size: 0.75rem;">Assurés Recensés</p>
+                        <h3 id="stat-assures" style="font-size: 1.5rem;">0</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p style="color: var(--text-muted); font-size: 0.75rem;">Membres (Compagnies)</p>
+                        <h3 id="stat-compagnies" style="font-size: 1.5rem;">0</h3>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top: 2rem;">
+                    <div class="card">
+                        <h3>Ventilation par Nature (Année en cours)</h3>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chart-nature"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Ventilation par Cause (Année en cours)</h3>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chart-cause"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top: 1rem;">
+                    <div class="card">
+                        <h3>Ventilation par Classe de Coût (Année en cours)</h3>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chart-cout"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Tendance des Sinistres (3 dernières années)</h3>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chart-trend"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1rem;">
+                    <h3>Activité Récente</h3>
+                    <p style="color: var(--text-muted); margin-top: 1.5rem;">Flux de données en temps réel...</p>
+                </div>
+            </section>
+
+            <!-- Admin Companies -->
+            <section id="asac-companies" class="view-section hidden">
+                <h2 style="margin-bottom: 1.5rem;">Gestion des Compagnies Membres</h2>
+                <div class="card">
+                    <button class="btn btn-primary" style="margin-bottom: 1rem;">+ Ajouter une compagnie</button>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 0.75rem;">Code</th>
+                                <th style="padding: 0.75rem;">Nom de la Compagnie</th>
+                                <th style="padding: 0.75rem;">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companies-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Admin Users -->
+            <section id="asac-users" class="view-section hidden">
+                <h2 style="margin-bottom: 1.5rem;">Gestion des Utilisateurs</h2>
+                <div class="card">
+                    <h4 style="margin-bottom: 1rem;">Ajouter un Utilisateur</h4>
+                    <form id="create-user-form">
+                        <div class="grid-2">
+                            <div class="form-group"><label>Identifiant (Login)</label><input type="text" id="usr-code"
+                                    class="form-input" required></div>
+                            <div class="form-group"><label>Nom Complet</label><input type="text" id="usr-nom"
+                                    class="form-input" required></div>
+                            <div class="form-group"><label>Mot de passe</label><input type="password" id="usr-password"
+                                    class="form-input" required></div>
+                            <div class="form-group">
+                                <label>Compagnie</label>
+                                <select id="usr-compagnie" class="form-input" required>
+                                    <!-- Options injected here -->
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Téléphone</label><input type="text" id="usr-tel"
+                                    class="form-input" required></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="usr-email"
+                                    class="form-input" required></div>
+                            <div class="form-group">
+                                <label>Rôle</label>
+                                <select id="usr-role" class="form-input">
+                                    <option value="Administrateur">Administrateur</option>
+                                    <option value="Gestionnaire">Gestionnaire</option>
+                                    <option value="Consultant">Consultant</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Statut</label>
+                                <select id="usr-statut" class="form-input">
+                                    <option value="Actif">Actif</option>
+                                    <option value="Inactif">Inactif</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Créer
+                            l'utilisateur</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <h4 style="margin-bottom: 1rem;">Liste des Utilisateurs</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 0.75rem;">Login</th>
+                                <th style="padding: 0.75rem;">Nom</th>
+                                <th style="padding: 0.75rem;">Compagnie</th>
+                                <th style="padding: 0.75rem;">Rôle</th>
+                                <th style="padding: 0.75rem;">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
