@@ -7,3 +7,4 @@ python-dotenv
 pyodbc
 pydantic
 python-multipart
+pydantic[email]
